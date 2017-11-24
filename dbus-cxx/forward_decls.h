@@ -28,7 +28,7 @@ namespace DBus {
   class Interface;
 
   class InterfaceProxy;
-  
+
   class Object;
 
   class ObjectProxy;
@@ -44,6 +44,9 @@ namespace DBus {
            >
   class Method;
 
+  template <class T>
+  class Property;
+
   template <class T_return,
             class T_arg1 = nil,
             class T_arg2 = nil,
@@ -53,7 +56,7 @@ namespace DBus {
             class T_arg6 = nil,
             class T_arg7 = nil
            >
-  class MethodProxy; 
+  class MethodProxy;
 
 };
 

@@ -30,16 +30,16 @@ namespace DBus
   /**
    * @ingroup local
    * @ingroup objects
-   * 
+   *
    * @author Rick L Vinyard Jr <rvinyard@cs.nmsu.edu>
    */
-  
+
    // TODO fix signals that expect a return value and partially specialize for void returns
-  
+
   class MethodBase
   {
     protected:
-      
+
       MethodBase(const std::string& name);
 
       MethodBase(const MethodBase& other);

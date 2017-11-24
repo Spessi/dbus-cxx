@@ -25,6 +25,7 @@
 #define DBUSCXX_UTILITY_H
 
 #define DBUS_CXX_INTROSPECTABLE_INTERFACE "org.freedesktop.DBus.Introspectable"
+#define DBUS_CXX_PROPERTIES_INTERFACE "org.freedesktop.DBus.Properties"
 
 /**
  * \def DBUS_CXX_ITERATOR_SUPPORT(CppType,DBusType)
@@ -41,7 +42,7 @@
  * Example supporting an enum as a 32-bit int:
  * \code
  * typedef MyEnum { ZERO, ONE, TWO, THREE } MyEnum;
- * 
+ *
  * DBUS_CXX_ITERATOR_SUPPORT( MyEnum, uint32_t )
  * \endcode
  */

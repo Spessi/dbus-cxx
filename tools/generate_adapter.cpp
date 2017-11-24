@@ -23,13 +23,13 @@
 std::string generate_adapter_h(Node n)
 {
   std::ostringstream sout;
-  
+
   std::string tab = "  ";
 
   std::string class_indent;
 
   std::string decl_indent;
-  
+
   std::vector<std::string> nsu = n.namespaces_upper();
 
   bool inherit_from_dbus_object = n.adapter_parent.empty();
@@ -74,10 +74,10 @@ std::string generate_adapter_h(Node n)
           << "#endif\n\n";
     }
   }
-  
-  
+
+
   sout << "\n";
-  
+
   sout << n.cpp_namespace_begin(tab) + "\n";
 
   // Class declaration
@@ -98,10 +98,11 @@ std::string generate_adapter_h(Node n)
   // Otherwise we need to instantiate the parent with the path and adaptee
   else
     sout << decl_indent << tab << n.adapter_parent << "(adaptee, path),\n";
-  
+
   sout << decl_indent << tab << "m_adaptee(adaptee)\n"
        << decl_indent << "{\n\n"
-       << decl_indent << tab << "::DBus::MethodBase::pointer temp_method;\n\n";
+       << decl_indent << tab << "::DBus::MethodBase::pointer temp_method;\n"
+       << decl_indent << tab << "::DBus::PropertyBase::pointer temp_property;\n\n";
 
   for ( unsigned i=0; i < n.interfaces.size(); i++ )
   {
@@ -204,4 +205,3 @@ std::string generate_adapter_cpp(Node n)
 {
   return std::string();
 }
-

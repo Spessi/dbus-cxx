@@ -20,8 +20,6 @@
 #ifndef METHOD_H
 #define METHOD_H
 
-#include <string>
-#include <map>
 
 #include "arg.h"
 

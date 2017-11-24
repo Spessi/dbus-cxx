@@ -27,7 +27,7 @@ bin_PROGRAMS = dbus-cxx-xml2cpp dbus-cxx-introspect
 
 dbus_cxx_xml2cpp_SOURCES = generate_adapter.cpp generate_proxy.cpp \
 	parsed_object.cpp xml2cpp.cpp xml_parser.cpp arg.cpp \
-	method.cpp signal.cpp
+	method.cpp signal.cpp property.cpp
 dbus_cxx_xml2cpp_LDADD = $(top_builddir)/dbus-cxx/libdbus-cxx.la \
 	$(PROJECT_LIBS)
 

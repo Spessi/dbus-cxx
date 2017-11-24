@@ -87,7 +87,7 @@ namespace DBus
     bool result = true;
 
     if ( not interface ) return false;
-    
+
     SIMPLELOGGER_DEBUG("dbus.Object","Object::add_interface " << interface->name() );
 
     // ========== WRITE LOCK ==========
@@ -139,12 +139,12 @@ namespace DBus
     Interfaces::iterator iter;
     Interface::pointer interface, old_default;
     InterfaceSignalNameConnections::iterator i;
-    
+
     bool need_emit_default_changed = false;
 
     // ========== WRITE LOCK ==========
     pthread_rwlock_wrlock( &m_interfaces_rwlock );
-    
+
     iter = m_interfaces.find( name );
     if ( iter != m_interfaces.end() )
     {
@@ -161,7 +161,7 @@ namespace DBus
         m_interface_signal_name_connections.erase(i);
         interface->set_object(NULL);
       }
-    
+
       if ( m_default_interface == interface ) {
         old_default = m_default_interface;
         m_default_interface = Interface::pointer();
@@ -181,7 +181,7 @@ namespace DBus
   bool Object::has_interface( const std::string & name )
   {
     Interfaces::const_iterator i;
-    
+
     // ========== READ LOCK ==========
     pthread_rwlock_rdlock( &m_interfaces_rwlock );
 
@@ -215,7 +215,7 @@ namespace DBus
       old_default = m_default_interface;
       m_default_interface = iter->second;
     }
-    
+
     // ========== UNLOCK ==========
     pthread_rwlock_unlock( &m_interfaces_rwlock );
 
@@ -339,6 +339,39 @@ namespace DBus
       return HANDLED;
     }
 
+    // Handle the properties interface
+    if( strcmp(callmessage->interface(), DBUS_CXX_PROPERTIES_INTERFACE) == 0 )
+    {
+      SIMPLELOGGER_DEBUG("dbus.Object","Object::handle_message: properties interface called");
+
+      std::string interface_name;
+      std::string property_name;
+      try {
+        Message::iterator i = callmessage->begin();
+        i  >> interface_name >> property_name;
+      }
+      catch ( ErrorInvalidTypecast& e ) {
+          return NOT_HANDLED;
+      }
+
+      if(/*interface_name.empty() &&*/ m_default_interface) {
+        // Try the default interface
+          PropertyBase::pointer prop = m_default_interface->property(property_name);
+          std::cout << "Member: " << callmessage->member() << std::endl;
+          if(prop == NULL) {
+            return NOT_HANDLED;
+          }
+          if(strcmp(callmessage->member(), "Get") == 0 )
+            return prop->handle_get(connection, callmessage);
+          else if(strcmp(callmessage->member(), "Set") == 0 )
+            return prop->handle_set(connection, callmessage);
+          return NOT_HANDLED;
+      }
+      else {
+
+      }
+    }
+
     // ========== READ LOCK ==========
     pthread_rwlock_rdlock( &m_interfaces_rwlock );
 
@@ -387,7 +420,7 @@ namespace DBus
 
   void Object::on_interface_name_changed(const std::string & oldname, const std::string & newname, Interface::pointer interface)
   {
-  
+
     // ========== WRITE LOCK ==========
     pthread_rwlock_wrlock( &m_interfaces_rwlock );
 
@@ -417,11 +450,10 @@ namespace DBus
       m_interface_signal_name_connections[interface] =
           interface->signal_name_changed().connect(sigc::bind(sigc::mem_fun(*this,&Object::on_interface_name_changed),interface));
     }
-    
+
     // ========== UNLOCK ==========
     pthread_rwlock_unlock( &m_interfaces_rwlock );
   }
 
 
 }
-

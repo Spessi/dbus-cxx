@@ -26,7 +26,7 @@ dbus_cxx_m4 = dbus_signal.h.m4 connection.h.m4 interfaceproxy.h.m4 signal_proxy.
 EXTRA_DIST = dbus_signal.h.m4 connection.h.m4 interfaceproxy.h.m4 signal_proxy.h.m4 method.h.m4 method_impl.h.m4 interface.h.m4 object.h.m4 objectproxy.h.m4  methodproxybase.h.m4 methodproxy.h.m4 template.macros.m4
 
 nodist_libdbus_cxx_la_SOURCES = dbus_signal.h connection.h interfaceproxy.h signal_proxy.h method.h method_impl.h interface.h object.h objectproxy.h methodproxybase.h methodproxy.h
-BUILT_SOURCES = dbus_signal.h connection.h interfaceproxy.h signal_proxy.h method.h method_impl.h interface.h object.h objectproxy.h methodproxybase.h methodproxy.h
+BUILT_SOURCES = dbus_signal.h connection.h interfaceproxy.h signal_proxy.h method.h method_impl.h interface.h object.h objectproxy.h methodproxybase.h methodproxy.h property.h propertybase.h
 CLEANFILES = dbus_signal.h connection.h interfaceproxy.h signal_proxy.h method.h method_impl.h interface.h object.h objectproxy.h methodproxybase.h methodproxy.h
 
 # Rules to generate .h and .cc from .h.m4 and .cpp.m4:
@@ -45,7 +45,7 @@ library_include_HEADERS = accumulators.h callmessage.h connection.h \
 	object.h objectpathhandler.h objectproxy.h path.h pendingcall.h pointer.h \
 	returnmessage.h signal_base.h signal_proxy.h signal_proxy_base.h signalmessage.h \
 	signalreceiver.h signature.h signatureiterator.h timeout.h types.h utility.h watch.h variant.h \
-	simplelogger_defs.h headerlog.h filedescriptor.h
+	simplelogger_defs.h headerlog.h filedescriptor.h property.h propertybase.h
 
 libdbus_cxx_la_SOURCES = callmessage.cpp connection.cpp dispatcher.cpp \
 	error.cpp errormessage.cpp interface.cpp interfaceproxy.cpp message.cpp \
@@ -53,7 +53,7 @@ libdbus_cxx_la_SOURCES = callmessage.cpp connection.cpp dispatcher.cpp \
 	methodproxybase.cpp object.cpp objectpathhandler.cpp objectproxy.cpp path.cpp \
 	pendingcall.cpp returnmessage.cpp signal_base.cpp signal_proxy_base.cpp \
 	signalmessage.cpp signalreceiver.cpp signature.cpp signatureiterator.cpp timeout.cpp \
-	utility.cpp watch.cpp
+	utility.cpp watch.cpp propertybase.cpp
 
 
 libdbus_cxx_la_LDFLAGS = -version-info @LIBTOOL_SO_VERSION@

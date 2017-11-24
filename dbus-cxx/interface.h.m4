@@ -31,7 +31,7 @@ define([DECLARE_CREATE_METHOD],[dnl
       DBusCxxPointer<Method<LIST(T_return, LOOP(T_arg%1, $1))> >
       create_method( const std::string& name );
 ])
-    
+
 
 define([DEFINE_CREATE_METHOD],[dnl
       template <LIST(class T_return, LOOP(class T_arg%1, [$1]))>
@@ -82,7 +82,7 @@ define([DECLARE_CREATE_SIGNAL],[dnl
       DBusCxxPointer<signal<LIST(T_return, LOOP(T_arg%1, $1))> >
       create_signal( const std::string& name );
 ])
-    
+
 define([DEFINE_CREATE_SIGNAL],[dnl
       template <LIST(class T_return, LOOP(class T_arg%1, [$1]))>
       DBusCxxPointer<signal<LIST(T_return, LOOP(T_arg%1, $1))> >
@@ -94,7 +94,7 @@ define([DEFINE_CREATE_SIGNAL],[dnl
         return DBusCxxPointer<DBus::signal<LIST(T_return,LOOP(T_arg%1, [$1]))> >();
       }
 ])
-    
+
 divert(0)
 dnl
 [/***************************************************************************
@@ -124,6 +124,7 @@ dnl
 #include <dbus-cxx/forward_decls.h>
 #include <dbus-cxx/methodbase.h>
 #include <dbus-cxx/dbus_signal.h>
+#include <dbus-cxx/property.h>
 
 #ifndef DBUSCXX_INTERFACE_H
 #define DBUSCXX_INTERFACE_H
@@ -135,7 +136,7 @@ namespace DBus {
    * @ingroup local
    *
    * @todo Do something about the signals when the interface name is changed
-   * 
+   *
    * @author Rick L Vinyard Jr <rvinyard@cs.nmsu.edu>
    */
   class Interface
@@ -150,7 +151,7 @@ namespace DBus {
     public:
       /**
        * Typedef to smart pointers to Interface.
-       * 
+       *
        * Can access \e type as \c Interface::pointer
        */
       typedef DBusCxxPointer<Interface> pointer;
@@ -161,7 +162,7 @@ namespace DBus {
        * Can access \e type as \c Interface::weak_pointer
        */
       typedef DBusCxxWeakPointer<Interface> weak_pointer;
-      
+
       /**
        * Typedef to the storage structure for methods.
        *
@@ -181,6 +182,8 @@ namespace DBus {
        * Can access \e type as \c Interface::Signals
        */
       typedef std::set<signal_base::pointer> Signals;
+
+      typedef std::map<std::string, PropertyBase::pointer> Properties;
 
       /**
        * Creates a named Interface
@@ -218,6 +221,8 @@ namespace DBus {
        */
       HandlerResult handle_call_message( DBusCxxPointer<Connection> connection, CallMessage::const_pointer message );
 
+      PropertyBase::pointer property(const std::string& property_name) const;
+
       /** Get the name of this interface */
       const std::string& name() const;
 
@@ -235,6 +240,12 @@ FOR(0, eval(CALL_SIZE),[[DECLARE_CREATE_METHOD(%1)
 
 FOR(0, eval(CALL_SIZE),[[DECLARE_CREATE_METHOD_SLOT(%1)
 ]])
+
+template <class T>
+DBusCxxPointer<Property<T>>
+create_property( const std::string& name );
+
+
       /** Adds the named method */
       bool add_method( MethodBase::pointer method );
 
@@ -243,6 +254,8 @@ FOR(0, eval(CALL_SIZE),[[DECLARE_CREATE_METHOD_SLOT(%1)
 
       /** True if the interface has a method with the given name */
       bool has_method( const std::string& name ) const;
+
+      bool add_property( PropertyBase::pointer property );
 
       /**
        * Adds the given signal
@@ -299,7 +312,7 @@ FOR(0, eval(CALL_SIZE),[[DECLARE_CREATE_SIGNAL(%1)
     private:
 
       Object* m_object;
-      
+
     protected:
 
       friend class Object;
@@ -307,10 +320,12 @@ FOR(0, eval(CALL_SIZE),[[DECLARE_CREATE_SIGNAL(%1)
       void set_object( Object* object );
 
       std::string m_name;
-      
+
       Methods m_methods;
 
       Signals m_signals;
+
+      Properties m_properties;
 
       mutable pthread_rwlock_t m_methods_rwlock;
 
@@ -320,9 +335,9 @@ FOR(0, eval(CALL_SIZE),[[DECLARE_CREATE_SIGNAL(%1)
       pthread_mutex_t m_name_mutex;
 
       sigc::signal<void,const std::string&,const std::string&> m_signal_name_changed;
-      
+
       sigc::signal<void,MethodBase::pointer> m_signal_method_added;
-      
+
       sigc::signal<void,MethodBase::pointer> m_signal_method_removed;
 
       typedef std::map<MethodBase::pointer,sigc::connection> MethodSignalNameConnections;
@@ -344,11 +359,22 @@ FOR(0, eval(CALL_SIZE),[[DECLARE_CREATE_SIGNAL(%1)
 }
 
 #include <dbus-cxx/method.h>
+#include <dbus-cxx/property.h>
 
 namespace DBus {
 
 FOR(0, eval(CALL_SIZE),[[DEFINE_CREATE_METHOD(%1)
 ]])
+
+template <class T>
+DBusCxxPointer<Property<T>>
+Interface::create_property( const std::string& name )
+{
+	DBusCxxPointer< Property<T> > property;
+	property = Property<T>::create(name);
+	this->add_property( property );
+	return property;
+}
 
 FOR(0, eval(CALL_SIZE),[[DEFINE_CREATE_METHOD_SLOT(%1)
 ]])
@@ -359,4 +385,3 @@ FOR(0, eval(CALL_SIZE),[[DEFINE_CREATE_SIGNAL(%1)
 } /* namespace DBus */
 
 #endif /* DBUS_CXX_INTERFACE_H */
-

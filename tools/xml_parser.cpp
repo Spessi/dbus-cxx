@@ -27,6 +27,7 @@
 typedef enum XMLTag {
   TAG_ARG,
   TAG_METHOD,
+  TAG_PROPERTY,
   TAG_SIGNAL,
   TAG_INTERFACE,
   TAG_NODE,
@@ -36,6 +37,7 @@ typedef enum XMLTag {
 const char* xml_tag_strings[] = {
   "arg",
   "method",
+  "property",
   "signal",
   "interface",
   "node"
@@ -64,6 +66,16 @@ XMLMethodAttr xml_method_attr( const char* name )
   for ( int i=0; i < METHOD_UNKNOWN; i++ )
     if ( strcasecmp(name, xml_method_strings[i]) == 0 ) return (XMLMethodAttr)i;
   return METHOD_UNKNOWN;
+}
+
+typedef enum XMLPropertyAttr { PROPERTY_TYPE, PROPERTY_NAME, PROPERTY_ACCESS, PROPERTY_UNKNOWN }  XMLPropertyAttr;
+const char* xml_property_strings[] = { "type", "name", "access" };
+XMLPropertyAttr xml_property_attr( const char* name )
+{
+  for ( int i=0; i < PROPERTY_UNKNOWN; i++ )
+    if ( strcasecmp(name, xml_property_strings[i]) == 0 ) return (XMLPropertyAttr)i;
+
+  return PROPERTY_UNKNOWN;
 }
 
 typedef enum XMLSignalAttr { SIGNAL_NAME, SIGNAL_ACCESSOR, SIGNAL_IGNORED, SIGNAL_UNKNOWN } XMLSignalAttr;
@@ -122,6 +134,7 @@ static std::deque<XMLTag> tag_stack;
 static Arg current_arg;
 static Method current_method;
 static bool use_current_method;
+static Property current_property;
 static DBusSignal current_signal;
 static Interface current_interface;
 static std::deque<Node> node_stack;
@@ -143,7 +156,7 @@ void start_element_handler( void* userData, const XML_Char* name, const XML_Char
   {
     case TAG_ARG:
       current_arg = Arg();
-      
+
       while ( *ptr != NULL )
       {
         ptrvaluestring = *(ptr+1);
@@ -162,7 +175,7 @@ void start_element_handler( void* userData, const XML_Char* name, const XML_Char
       break;
     case TAG_METHOD:
       current_method = Method();
-      
+
       while ( *ptr != NULL )
       {
         ptrvaluestring = *(ptr+1);
@@ -177,9 +190,25 @@ void start_element_handler( void* userData, const XML_Char* name, const XML_Char
         ptr += 2;
       }
       break;
+    case TAG_PROPERTY:
+      current_property = Property();
+
+      while ( *ptr != NULL )
+      {
+        ptrvaluestring = *(ptr+1);
+        switch(xml_property_attr( *ptr ) )
+        {
+          case PROPERTY_TYPE:   current_property.set_type( ptrvaluestring ); break;
+          case PROPERTY_NAME:   current_property.set_name( ptrvaluestring ); break;
+          case PROPERTY_ACCESS: current_property.set_access( ptrvaluestring ); break;
+          default: break;
+        }
+        ptr += 2;
+      }
+      break;
     case TAG_SIGNAL:
       current_signal = DBusSignal();
-      
+
       while ( *ptr != NULL )
       {
         ptrvaluestring = *(ptr+1);
@@ -195,7 +224,7 @@ void start_element_handler( void* userData, const XML_Char* name, const XML_Char
       break;
     case TAG_INTERFACE:
       current_interface = Interface();
-      
+
       while ( *ptr != NULL )
       {
         ptrvaluestring = *(ptr+1);
@@ -211,7 +240,7 @@ void start_element_handler( void* userData, const XML_Char* name, const XML_Char
       break;
     case TAG_NODE:
       node_stack.push_front( Node() );
-      
+
       while ( *ptr != NULL )
       {
         ptrvaluestring = *(ptr+1);
@@ -292,6 +321,15 @@ void end_element_handler( void* userData, const XML_Char* name )
         default: /* we shouldn't get here, but if we are do nothing */             break;
       }
       break;
+    case TAG_PROPERTY:
+      switch ( tag_stack.front() )
+      {
+        case TAG_INTERFACE: current_interface.properties.push_back(current_property); break;
+        default:
+        break;
+      }
+
+      break;
     case TAG_SIGNAL:
       switch ( tag_stack.front() )
       {
@@ -314,7 +352,7 @@ void end_element_handler( void* userData, const XML_Char* name )
     default:
       break;
   }
-  
+
 }
 
 Nodes parse_xml( const std::string& xml )

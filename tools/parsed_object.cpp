@@ -72,7 +72,7 @@ static inline std::string dbuscxx_type_from_type( DBus::Type t ){
 std::string cppTypeFromSignature( DBus::Signature sig ){
   DBus::Signature::iterator sigIter = sig.begin();
   std::string returnVal = "";
- 
+
   while( sigIter.is_valid() ){
     std::cout << ((char)sigIter.type()) << std::endl;
     //returnVal += cpp_dbus_type( sigIter.type() );
@@ -178,6 +178,10 @@ std::vector< std::string > Interface::cpp_adapter_creation()
       strings.insert(strings.end(), names.begin(), names.end());
     }
   }
+  for ( unsigned int i = 0; i < properties.size(); i++ ) {
+    properties[i].set_interface( this );
+    strings.push_back ( properties[i].cpp_adapter_creation() );
+  }
   for ( unsigned int i = 0; i < signals.size(); i++ ) {
     signals[i].set_interface( this );
     if ( signals[i].args_valid() )
@@ -221,6 +225,11 @@ std::vector< std::string > Interface::cpp_adapter_stubs()
     if ( methods[i].args_valid() )
       strings.push_back( methods[i].cpp_adapter_stub() );
   }
+  for ( unsigned int i = 0; i < properties.size(); i++ ) {
+    properties[i].set_interface( this );
+    strings.push_back( properties[i].cpp_adapter_stub_getter() );
+    strings.push_back( properties[i].cpp_adapter_stub_setter() );
+  }
   for ( unsigned int i = 0; i < signals.size(); i++ ) {
     signals[i].set_interface( this );
     if ( signals[i].args_valid() and not signals[i].get_ignored() )
@@ -243,13 +252,13 @@ std::map<std::string,std::string> Interface::iterator_support()
     current = m->iterator_support();
     merge( need_support, current );
   }
-  
+
   for ( s = signals.begin(); s != signals.end(); s++ )
   {
     current = s->iterator_support();
     merge( need_support, current );
   }
-  
+
   return need_support;
 }
 
@@ -336,7 +345,7 @@ std::string Node::adaptee_fqn()
 {
   if ( not orig_namespace.empty() )
     return orig_namespace + "::" + name();
-  if ( name().empty() ) 
+  if ( name().empty() )
     return "AdapterName";
   return name();
 }
@@ -358,7 +367,7 @@ std::map<std::string,std::string> Node::iterator_support()
     current = i->iterator_support();
     merge( need_support, current );
   }
-  
+
   return need_support;
 }
 
@@ -393,4 +402,3 @@ std::vector< std::string > Node::other_proxy_parent_includes()
   }
   return result;
 }
-

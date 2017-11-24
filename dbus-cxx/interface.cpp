@@ -27,6 +27,10 @@
 namespace DBus
 {
 
+  int test_getter() {
+    return 1337;
+  }
+
   Interface::Interface( const std::string& name ):
       m_object(NULL),
       m_name(name)
@@ -34,6 +38,11 @@ namespace DBus
     pthread_rwlock_init( &m_methods_rwlock, NULL );
     pthread_rwlock_init( &m_signals_rwlock, NULL );
     pthread_mutex_init( &m_name_mutex, NULL );
+
+    /*DBusCxxPointer< Property<int> > prop;
+    prop = Property<int>::create();
+    prop->set_getter(sigc::ptr_fun(&test_getter));
+    m_properties["TestProperty"] = prop;*/
   }
 
   Interface::pointer Interface::create(const std::string& name)
@@ -78,7 +87,7 @@ namespace DBus
 
     for ( Signals::iterator i = m_signals.begin(); i != m_signals.end(); i++ )
       (*i)->set_interface( new_name );
-    
+
     pthread_mutex_unlock( &m_name_mutex );
 
     m_signal_name_changed.emit(old_name, new_name);
@@ -95,7 +104,7 @@ namespace DBus
 
     // ========== READ LOCK ==========
     pthread_rwlock_rdlock( &m_methods_rwlock );
-    
+
     iter = m_methods.find( name );
 
     // ========== UNLOCK ==========
@@ -106,12 +115,29 @@ namespace DBus
     return iter->second;
   }
 
+
+  PropertyBase::pointer Interface::property(const std::string& property_name) const {
+      Properties::const_iterator iter;
+
+      // ========== READ LOCK ==========
+      //pthread_rwlock_rdlock( &m_methods_rwlock );
+
+      iter = m_properties.find( property_name );
+
+      // ========== UNLOCK ==========
+      //pthread_rwlock_unlock( &m_methods_rwlock );
+
+      if ( iter == m_properties.end() ) return PropertyBase::pointer();
+
+      return iter->second;
+  }
+
   bool Interface::add_method( MethodBase::pointer method )
   {
     bool result = true;
-    
+
     if ( not method ) return false;
-    
+
     // ========== WRITE LOCK ==========
     pthread_rwlock_wrlock( &m_methods_rwlock );
 
@@ -166,14 +192,14 @@ namespace DBus
 
     // ========== UNLOCK ==========
     pthread_rwlock_unlock( &m_methods_rwlock );
-    
+
     if ( method ) m_signal_method_removed.emit( method );
   }
 
   bool Interface::has_method( const std::string & name ) const
   {
     Methods::const_iterator iter;
-    
+
     // ========== READ LOCK ==========
     pthread_rwlock_rdlock( &m_methods_rwlock );
 
@@ -185,6 +211,18 @@ namespace DBus
     return ( iter != m_methods.end() );
   }
 
+  bool Interface::add_property( PropertyBase::pointer property )
+  {
+    bool result = true;
+
+    if ( not property ) return false;
+
+    m_properties.insert(std::make_pair(property->name(), property));
+
+
+    return result;
+  }
+
   bool Interface::add_signal( signal_base::pointer sig )
   {
     bool result = false;
@@ -192,7 +230,7 @@ namespace DBus
     if ( not sig ) return false;
 
     SIMPLELOGGER_DEBUG("dbus.Interface", "Interface(" << this->name() << ")::add_signal (" << sig->name() << ")");
-    
+
     // ========== WRITE LOCK ==========
     pthread_rwlock_wrlock( &m_signals_rwlock );
 
@@ -222,7 +260,7 @@ namespace DBus
   bool Interface::remove_signal( signal_base::pointer signal )
   {
     bool result = false;
-    
+
     // ========== WRITE LOCK ==========
     pthread_rwlock_wrlock( &m_signals_rwlock );
 
@@ -243,7 +281,7 @@ namespace DBus
   bool Interface::remove_signal( const std::string& name )
   {
     bool result = false;
-    
+
     // ========== WRITE LOCK ==========
     pthread_rwlock_wrlock( &m_signals_rwlock );
 
@@ -260,7 +298,7 @@ namespace DBus
         i++;
       }
     }
-    
+
     // ========== UNLOCK ==========
     pthread_rwlock_unlock( &m_signals_rwlock );
 
@@ -270,12 +308,12 @@ namespace DBus
   bool Interface::has_signal( signal_base::pointer signal ) const
   {
     bool result;
-    
+
     // ========== READ LOCK ==========
     pthread_rwlock_rdlock( &m_signals_rwlock );
 
     result = m_signals.find(signal) != m_signals.end();
-    
+
     // ========== UNLOCK ==========
     pthread_rwlock_unlock( &m_signals_rwlock );
 
@@ -285,7 +323,7 @@ namespace DBus
   bool Interface::has_signal( const std::string& name ) const
   {
     bool result = false;
-    
+
     // ========== READ LOCK ==========
     pthread_rwlock_rdlock( &m_signals_rwlock );
 
@@ -297,7 +335,7 @@ namespace DBus
         break;
       }
     }
-    
+
     // ========== UNLOCK ==========
     pthread_rwlock_unlock( &m_signals_rwlock );
 
@@ -312,7 +350,7 @@ namespace DBus
   signal_base::pointer Interface::signal(const std::string& signal_name)
   {
     signal_base::pointer sig;
-    
+
     // ========== READ LOCK ==========
     pthread_rwlock_rdlock( &m_signals_rwlock );
 
@@ -365,7 +403,7 @@ namespace DBus
   HandlerResult Interface::handle_call_message( Connection::pointer connection, CallMessage::const_pointer message )
   {
     SIMPLELOGGER_DEBUG( "dbus.Interface", "handle_call_message  interface=" << m_name );
-    
+
     Methods::iterator current, upper;
     MethodBase::pointer method;
     HandlerResult result = NOT_HANDLED;
@@ -382,7 +420,7 @@ namespace DBus
 
       return NOT_HANDLED;
     }
-    
+
     upper = m_methods.upper_bound( message->member() );
 
     for ( ; current != upper; current++ )
@@ -393,16 +431,17 @@ namespace DBus
         break;
       }
     }
-    
+
     // ========== UNLOCK ==========
 //     pthread_rwlock_unlock( &m_methods_rwlock );
 
     return result;
   }
 
+
   void Interface::on_method_name_changed(const std::string & oldname, const std::string & newname, MethodBase::pointer method)
   {
-  
+
     // ========== WRITE LOCK ==========
     pthread_rwlock_wrlock( &m_methods_rwlock );
 
@@ -432,7 +471,7 @@ namespace DBus
       m_method_signal_name_connections[method] =
           method->signal_name_changed().connect(sigc::bind(sigc::mem_fun(*this,&Interface::on_method_name_changed),method));
     }
-    
+
     // ========== UNLOCK ==========
     pthread_rwlock_unlock( &m_methods_rwlock );
   }
@@ -453,7 +492,7 @@ namespace DBus
   void Interface::set_object( Object* object )
   {
     m_object = object;
-    
+
     if ( object == NULL )
     {
       for ( Signals::iterator i = m_signals.begin(); i != m_signals.end(); i++ )
@@ -473,4 +512,3 @@ namespace DBus
   }
 
 }
-

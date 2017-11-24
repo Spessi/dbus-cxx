@@ -34,7 +34,7 @@ define([DECLARE_CREATE_METHOD],[dnl
       DBusCxxPointer<Method<LIST(T_return, LOOP(T_arg%1, $1))> >
       create_method( const std::string& method_name, sigc::slot$1<LIST(T_return, LOOP(T_arg%1, $1))> slot );
 ])
-    
+
 define([DEFINE_CREATE_METHOD],[dnl
   template <LIST(class T_return, LOOP(class T_arg%1, [$1]))>
   DBusCxxPointer<Method<LIST(T_return, LOOP(T_arg%1, $1))> >
@@ -67,7 +67,7 @@ define([DECLARE_CREATE_INTERFACE_METHOD],[dnl
       DBusCxxPointer<Method<LIST(T_return, LOOP(T_arg%1, $1))> >
       create_method( const std::string& interface_name, const std::string& method_name, sigc::slot$1<LIST(T_return, LOOP(T_arg%1, $1))> slot );
 ])
-    
+
 define([DEFINE_CREATE_INTERFACE_METHOD],[dnl
   template <LIST(class T_return, LOOP(class T_arg%1, [$1]))>
   DBusCxxPointer<Method<LIST(T_return, LOOP(T_arg%1, $1))> >
@@ -84,7 +84,7 @@ define([DEFINE_CREATE_INTERFACE_METHOD],[dnl
     return method;
   }
 ])
-    
+
 
 define([DECLARE_CREATE_SIGNAL_N],[dnl
       /**
@@ -98,7 +98,7 @@ define([DECLARE_CREATE_SIGNAL_N],[dnl
       DBusCxxPointer<signal<LIST(T_return, LOOP(T_arg%1, $1))> >
       create_signal( const std::string& name );
 ])
-    
+
 define([DEFINE_CREATE_SIGNAL_N],[dnl
   template <LIST(class T_return, LOOP(class T_arg%1, [$1]))>
   DBusCxxPointer<signal<LIST(T_return, LOOP(T_arg%1, $1))> >
@@ -111,7 +111,7 @@ define([DEFINE_CREATE_SIGNAL_N],[dnl
     return sig;
   }
 ])
-    
+
 define([DECLARE_CREATE_SIGNAL_IN],[dnl
       /**
        * Creates a signal with a return value (possibly \c void ) and $1 parameters and adds it to the named interface
@@ -124,7 +124,7 @@ define([DECLARE_CREATE_SIGNAL_IN],[dnl
       DBusCxxPointer<signal<LIST(T_return, LOOP(T_arg%1, $1))> >
       create_signal( const std::string& iface, const std::string& name );
 ])
-    
+
 define([DEFINE_CREATE_SIGNAL_IN],[dnl
   template <LIST(class T_return, LOOP(class T_arg%1, [$1]))>
   DBusCxxPointer<signal<LIST(T_return, LOOP(T_arg%1, $1))> >
@@ -136,7 +136,7 @@ define([DEFINE_CREATE_SIGNAL_IN],[dnl
     return sig;
   }
 ])
-    
+
 divert(0)
 dnl
 [/***************************************************************************
@@ -227,7 +227,7 @@ namespace DBus
    * @ingroup objects
    *
    * @todo TODO rethink whether it might be beneficial to have multiple connections for one object
-   * 
+   *
    * @author Rick L Vinyard Jr <rvinyard@cs.nmsu.edu>
    */
   class Object: public ObjectPathHandler
@@ -244,7 +244,7 @@ namespace DBus
 
       /**
        * Typedef to smart pointers to Object.
-       * 
+       *
        * Can access \e type as \c Object::pointer
        */
       typedef DBusCxxPointer<Object> pointer;
@@ -305,6 +305,10 @@ FOR(0, eval(CALL_SIZE),[[DECLARE_CREATE_METHOD(%1)
 ]])
 FOR(0, eval(CALL_SIZE),[[DECLARE_CREATE_INTERFACE_METHOD(%1)
 ]])
+template <class T>
+DBusCxxPointer<Property<T>>
+create_property( const std::string& interface_name, const std::string& property_name, sigc::slot0<T> slot_getter, sigc::slot1<void, T> slot_setter );
+
       /** Removes the first interface found with the given name */
       void remove_interface( const std::string& name );
 
@@ -326,7 +330,7 @@ FOR(0, eval(CALL_SIZE),[[DECLARE_CREATE_INTERFACE_METHOD(%1)
        *
        * The first interface found with a matching name is used. If there is
        * already a default interface set it will be replaced.
-       * 
+       *
        * @return \c True if an interface with the specified name was found, \c false otherwise.
        * @param new_default_name The name of the interface to use as the default.
        */
@@ -420,7 +424,7 @@ FOR(0, eval(CALL_SIZE),[[DECLARE_CREATE_SIGNAL_IN(%1)
        *
        * If no interface returns \c HANDLED the default interface (if one is
        * set) will be tried.
-       * 
+       *
        * @return \c HANDLED if this object handled the message, \c NOT_HANDLED otherwise
        * @param conn The Connection to send the reply message on
        * @param msg The message to handle; must be a CallMessage or it will not be handled
@@ -430,7 +434,7 @@ FOR(0, eval(CALL_SIZE),[[DECLARE_CREATE_SIGNAL_IN(%1)
     protected:
 
       Children m_children;
-      
+
       mutable pthread_rwlock_t m_interfaces_rwlock;
 
       pthread_mutex_t m_name_mutex;
@@ -471,6 +475,23 @@ FOR(0, eval(CALL_SIZE),[[DEFINE_CREATE_METHOD(%1)
 ]])
 FOR(0, eval(CALL_SIZE),[[DEFINE_CREATE_INTERFACE_METHOD(%1)
 ]])
+template <class T>
+DBusCxxPointer<Property<T>>
+Object::create_property( const std::string& interface_name, const std::string& property_name, sigc::slot0<T> slot_getter, sigc::slot1<void, T> slot_setter )
+{
+	Interface::pointer interface;
+	interface = this->interface(interface_name);
+	if ( not interface ) interface = this->create_interface(interface_name);
+	// TODO throw an error if the interface still doesn't exist
+
+	DBusCxxPointer< Property<T> > property;
+	property = interface->create_property<T>(property_name);
+	property->set_getter_slot( slot_getter );
+	property->set_setter_slot( slot_setter );
+
+	return property;
+}
+
 FOR(0, eval(CALL_SIZE),[[DEFINE_CREATE_SIGNAL_N(%1)
 ]])
 FOR(0, eval(CALL_SIZE),[[DEFINE_CREATE_SIGNAL_IN(%1)

@@ -29,6 +29,7 @@
 
 
 #include "method.h"
+#include "property.h"
 #include "dbus_signal.h"
 
 
@@ -53,8 +54,9 @@ struct Interface {
   std::string dbus_name;
   bool ignored;
   std::vector<Method> methods;
+  std::vector<Property> properties;
   std::vector<DBusSignal> signals;
-  
+
   std::string strfmt(int depth=0);
 
   std::string name() { if ( not cxx_name.empty() ) return cxx_name; return dbus_name; }
@@ -72,7 +74,7 @@ struct Interface {
 
 struct Node {
   Node(): ignored(false) { }
-  
+
   std::string dbus_name;
   std::string cppname;
   std::string dbus_destination;
@@ -106,7 +108,7 @@ struct Node {
   std::vector<Node> children;
   std::vector<Method> methods;
   std::vector<DBusSignal> signals;
-  
+
   std::string strfmt(int depth=0);
 
   std::vector<std::string> namespaces();
@@ -118,7 +120,7 @@ struct Node {
   std::string proxy_name()   { return name() + "Proxy"; }
 
   std::string adaptee_fqn();
-  
+
   std::string cpp_namespace_begin(const std::string& tab="  ");
   std::string cpp_namespace_end(const std::string& tab="  ");
 
