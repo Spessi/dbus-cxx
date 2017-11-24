@@ -51,10 +51,10 @@ std::string Property::cpp_adapter_stub_getter()
   std::ostringstream sout;
 
   if(this->access == "read") {
-    sout << this->type << " get_" << stubname() << "() { this->check_adaptee(); m_adaptee->get_" << this->name << "(); }";
+    sout << this->type << " get_" << stubname() << "() { this->check_adaptee(); return m_adaptee->get_" << this->name << "(); }";
   }
   else if(this->access == "readwrite") {
-    sout << this->type << " get_" << stubname() << "() { this->check_adaptee(); m_adaptee->get_" << this->name << "(); }";
+    sout << this->type << " get_" << stubname() << "() { this->check_adaptee(); return m_adaptee->get_" << this->name << "(); }";
   }
 
   return sout.str();
@@ -65,10 +65,10 @@ std::string Property::cpp_adapter_stub_setter()
   std::ostringstream sout;
 
   if(this->access == "write") {
-    sout << "void set_" << stubname() << "(" << this->type << " value) { this->check_adaptee(); return m_adaptee->set_" << this->name << "(value); }";
+    sout << "void set_" << stubname() << "(" << this->type << " value) { this->check_adaptee(); m_adaptee->set_" << this->name << "(value); }";
   }
   else if(this->access == "readwrite") {
-    sout <<  "void set_" << stubname() << "(" << this->type << " value) { this->check_adaptee(); return m_adaptee->set_" << this->name << "(value); }";
+    sout <<  "void set_" << stubname() << "(" << this->type << " value) { this->check_adaptee(); m_adaptee->set_" << this->name << "(value); }";
   }
 
   return sout.str();
