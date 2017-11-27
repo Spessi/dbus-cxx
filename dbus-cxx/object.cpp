@@ -357,7 +357,6 @@ namespace DBus
       if(/*interface_name.empty() &&*/ m_default_interface) {
         // Try the default interface
           PropertyBase::pointer prop = m_default_interface->property(property_name);
-          std::cout << "Member: " << callmessage->member() << std::endl;
           if(prop == NULL) {
             return NOT_HANDLED;
           }
