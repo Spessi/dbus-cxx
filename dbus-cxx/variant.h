@@ -34,11 +34,10 @@ class Variant{
 	public:
 
 	T data;
-	Variant(){
-		data = 0;
+	Variant() {
 	}
 
-	Variant( T& idata ){
+	Variant( T idata ){
 		data = idata;
 	}
 

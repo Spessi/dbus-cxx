@@ -47,7 +47,7 @@ namespace DBus {
           }
 
           try {
-            T value = m_slot_getter();
+            Variant<T> value = m_slot_getter();
             ReturnMessage::pointer retmsg = message->create_reply();
             if ( not retmsg ) return NOT_HANDLED;
 
@@ -83,7 +83,7 @@ namespace DBus {
 
           std::string interface_name;
           std::string property_name;
-          T value;
+          Variant<T> value;
           try {
             Message::iterator i = message->begin();
             i >> interface_name >> property_name >> value;
@@ -93,7 +93,7 @@ namespace DBus {
           }
 
           try {
-            m_slot_setter(value);
+            m_slot_setter(value.data);
             ReturnMessage::pointer retmsg = message->create_reply();
 
             if ( not retmsg ) return NOT_HANDLED;
@@ -113,7 +113,7 @@ namespace DBus {
             stream << "DBus-cxx " << DBUS_CXX_PACKAGE_MAJOR_VERSION << "." <<
                  DBUS_CXX_PACKAGE_MINOR_VERSION << "." << DBUS_CXX_PACKAGE_MICRO_VERSION << " unknown error.";
             ErrorMessage::pointer errmsg = ErrorMessage::create( message, DBUS_ERROR_FAILED, stream.str() );
-
+            
             if ( not errmsg ) return NOT_HANDLED;
 
             connection->send(errmsg);

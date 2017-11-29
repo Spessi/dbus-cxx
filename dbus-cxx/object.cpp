@@ -342,6 +342,9 @@ namespace DBus
     // Handle the properties interface
     if( strcmp(callmessage->interface(), DBUS_CXX_PROPERTIES_INTERFACE) == 0 )
     {
+      // ========== READ LOCK ==========
+      pthread_rwlock_rdlock( &m_interfaces_rwlock );
+
       SIMPLELOGGER_DEBUG("dbus.Object","Object::handle_message: properties interface called");
 
       std::string interface_name;
@@ -351,24 +354,28 @@ namespace DBus
         i  >> interface_name >> property_name;
       }
       catch ( ErrorInvalidTypecast& e ) {
+          // ========== UNLOCK ==========
+          pthread_rwlock_unlock( &m_interfaces_rwlock );
           return NOT_HANDLED;
       }
 
-      if(/*interface_name.empty() &&*/ m_default_interface) {
+      if(/*interface_name.empty() &&*/ m_default_interface)
+      {
         // Try the default interface
           PropertyBase::pointer prop = m_default_interface->property(property_name);
-          if(prop == NULL) {
-            return NOT_HANDLED;
-          }
-          if(strcmp(callmessage->member(), "Get") == 0 )
-            return prop->handle_get(connection, callmessage);
-          else if(strcmp(callmessage->member(), "Set") == 0 )
-            return prop->handle_set(connection, callmessage);
-          return NOT_HANDLED;
-      }
-      else {
+          result = NOT_HANDLED;
 
+          if(prop == NULL)
+            result = NOT_HANDLED;
+          else if(strcmp(callmessage->member(), "Get") == 0 ) 
+            result = prop->handle_get(connection, callmessage);
+          else if(strcmp(callmessage->member(), "Set") == 0 )
+            result = prop->handle_set(connection, callmessage);
       }
+
+      // ========== UNLOCK ==========
+      pthread_rwlock_unlock( &m_interfaces_rwlock );
+      return result;
     }
 
     // ========== READ LOCK ==========

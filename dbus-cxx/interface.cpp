@@ -38,11 +38,6 @@ namespace DBus
     pthread_rwlock_init( &m_methods_rwlock, NULL );
     pthread_rwlock_init( &m_signals_rwlock, NULL );
     pthread_mutex_init( &m_name_mutex, NULL );
-
-    /*DBusCxxPointer< Property<int> > prop;
-    prop = Property<int>::create();
-    prop->set_getter(sigc::ptr_fun(&test_getter));
-    m_properties["TestProperty"] = prop;*/
   }
 
   Interface::pointer Interface::create(const std::string& name)

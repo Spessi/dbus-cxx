@@ -129,7 +129,8 @@ namespace DBus
 
       template <typename T>
       bool append( const Variant<T> & var){
-        this->open_container( CONTAINER_VARIANT, signature(var.data)  );
+        T t = var.data;
+        this->open_container( CONTAINER_VARIANT, signature( t ) );
         m_subiter->append(var.data);
         return this->close_container();
       }
